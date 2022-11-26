@@ -29,7 +29,7 @@ class MinimalPublisher(Node):
         self.subscription_1  # prevent unused variable warning
 
         self.marker_arr = MarkerArray()
-        self.marker_len = 4
+        self.marker_len = 0
         self.v = [0]*self.marker_len
         for i in range(self.marker_len):
             mark = Marker()
@@ -94,7 +94,13 @@ class MinimalPublisher(Node):
         ratio = random.rand()
         P = Pi*ratio+Pf*(1-ratio)
         # print('random link', i)
-        return P[0][0],P[1][0]#+random.randint(-2,2)
+        # return P[0][0],P[1][0]#+random.randint(-2,2)
+        p = P[:2]
+        p[0][0] += np.random.normal(0,0.2)
+        p[1][0] += np.random.normal(0,0.2)
+        if np.linalg.norm(p)<0.3:
+            p *= 0.3/np.linalg.norm(p)
+        return p[0][0],p[1][0]
 
 
 

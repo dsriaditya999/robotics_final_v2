@@ -58,6 +58,7 @@ class GeneratorNode(Node):
             'target_marker_pub',
             self.target_rcvd,
             10)
+        self.subscription_2  # prevent unused variable warning
 
         # Wait for a connection to happen.  This isn't necessary, but
         # means we don't start until the rest of the system is ready.
@@ -86,6 +87,7 @@ class GeneratorNode(Node):
         self.trajectory.set_goal(pos)
 
     def target_rcvd(self,msg):
+        self.get_logger().info("set target")
         self.trajectory.set_target(msg.position,msg.orientation)
 
     # Shutdown

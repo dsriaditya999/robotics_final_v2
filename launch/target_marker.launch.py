@@ -47,7 +47,7 @@ def generate_launch_description():
         name       = 'target_marker',
         package    = 'final_v2',
         executable = 'target_marker',
-        output     = 'screen',
+        # output     = 'screen',
         on_exit    = Shutdown())
 
     # Configure a node for RVIZ
@@ -77,11 +77,25 @@ def generate_launch_description():
         on_exit    = Shutdown())
 
     # Configure a node for Robot Joint GUI
-    node_joint_gui = Node(
-        name       = 'joint_state_publisher_gui', 
-        package    = 'joint_state_publisher_gui',
-        executable = 'joint_state_publisher_gui',
+    # node_joint_gui = Node(
+    #     name       = 'joint_state_publisher_gui', 
+    #     package    = 'joint_state_publisher_gui',
+    #     executable = 'joint_state_publisher_gui',
+    #     output     = 'screen',
+    #     on_exit    = Shutdown())
+
+    node_joint_test6 = Node(
+        name       = 'test6', 
+        package    = 'final_v2',
+        executable = 'test6',
         output     = 'screen',
+        on_exit    = Shutdown())
+
+    node_joint_marker = Node(
+        name       = 'marker', 
+        package    = 'final_v2',
+        executable = 'marker',
+        # output     = 'screen',
         on_exit    = Shutdown())
 
 
@@ -97,5 +111,6 @@ def generate_launch_description():
         node_rviz,
         node_urdf,
         node_publisher,
-        node_joint_gui,
+        node_joint_test6,
+        node_joint_marker
     ])

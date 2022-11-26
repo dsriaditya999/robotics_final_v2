@@ -197,18 +197,18 @@ class TargetNode(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         # Reach Target Signal
-        self.subscription_2 = self.create_subscription(
-            Bool,
-            'reach',
-            self.reach_control_rcvd,
-            10
-        )
+        # self.subscription_2 = self.create_subscription(
+        #     Bool,
+        #     'reach',
+        #     self.reach_control_rcvd,
+        #     10
+        # )
 
-    def reach_control_rcvd(self,msg):
+    # def reach_control_rcvd(self,msg):
 
-        print('Should I reach for the target? "%s"' % msg.data)
+    #     print('Should I reach for the target? "%s"' % msg.data)
 
-            # Do something here
+    #         # Do something here
 
 
     def timer_callback(self):
