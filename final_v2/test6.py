@@ -92,6 +92,7 @@ class Trajectory():
         return j
 
     def set_target(self,pos,quat):
+        self.node.get_logger().info('set target position')
         self.node.get_logger().info(str(pos.x))
         self.pos = [pos.x,pos.y,pos.z]
         self.quat = [quat.w,quat.x,quat.y,quat.z]

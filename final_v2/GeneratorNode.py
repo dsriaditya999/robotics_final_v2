@@ -57,7 +57,7 @@ class GeneratorNode(Node):
             Pose,
             'target_marker_pub',
             self.target_rcvd,
-            10)
+            100)
         self.subscription_2  # prevent unused variable warning
 
         # Wait for a connection to happen.  This isn't necessary, but
