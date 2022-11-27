@@ -87,7 +87,7 @@ class GeneratorNode(Node):
         self.trajectory.set_goal(pos)
 
     def target_rcvd(self,msg):
-        self.get_logger().info("set target")
+        #self.get_logger().info("set target")
         self.trajectory.set_target(msg.position,msg.orientation)
 
     # Shutdown

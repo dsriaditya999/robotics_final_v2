@@ -17,7 +17,7 @@ class MinimalPublisher(Node):
         timer_period = 0.001  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
-        self.chain = KinematicChain(Node('marker_chain'), 'world', 'link_41', self.jointnames())
+        self.chain = KinematicChain(Node('marker_chain'), 'world', 'tip', self.jointnames())
         self.q = np.radians(np.array([0]*41).reshape((-1,1)))
         self.q[0,0] = np.pi/2
 
