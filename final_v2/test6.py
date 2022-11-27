@@ -22,8 +22,8 @@ from std_msgs.msg import Int32MultiArray
 from hw3code.Segments   import Hold, Stay, GotoCubic, SplineCubic
 # from hw4code.hw4p3      import fkin, Jac
 
-from final_v1.GeneratorNode     import GeneratorNode
-from final_v1.KinematicChain    import KinematicChain
+from final_v2.GeneratorNode     import GeneratorNode
+from hw6code.KinematicChain    import KinematicChain
 from hw5code.TransformHelpers  import *
 from std_msgs.msg       import Bool
 #
@@ -33,7 +33,7 @@ class Trajectory():
     # Initialization.
     def __init__(self,node):
         # Pick the target.
-        self.chain = KinematicChain(node, 'world', 'link_41', self.jointnames())
+        self.chain = KinematicChain(node, 'world', 'tip', self.jointnames())
         self.q = np.radians(np.array([0]*41).reshape((-1,1)))
         self.q[0,0] = np.pi/2
         self.q_nom = np.radians(np.array([0]*41).reshape((-1,1)))
@@ -72,14 +72,17 @@ class Trajectory():
         self.pos = [3,0,0]
         self.quat = [1.,0.,0.,0.]
         self.node = node
+        self.reach_status = True
 
 
     def reach_control_rcvd(self,msg):
 
+        self.reach_status = msg.data
+
         if msg.data and len(self.segments)==0:
-            self.node.get_logger().info('getting target?')
+            #self.node.get_logger().info('getting target?')
             
-            self.node.get_logger().info(str(msg.data))
+            #self.node.get_logger().info(str(msg.data))
             self._set_target(self.pos, self.quat)
 
     # Declare the joint names.
@@ -92,8 +95,7 @@ class Trajectory():
         return j
 
     def set_target(self,pos,quat):
-        self.node.get_logger().info('set target position')
-        self.node.get_logger().info(str(pos.x))
+        #self.node.get_logger().info(str(pos.x))
         self.pos = [pos.x,pos.y,pos.z]
         self.quat = [quat.w,quat.x,quat.y,quat.z]
 
@@ -259,60 +261,70 @@ class Trajectory():
         #     self.t0 += seg[0].duration()
         #     print('target hit')
 
-        if len(self.segments)==0:
-            qdot += (np.eye(J_all.shape[1])- Jinv @ J_all) @ (self.lam*(self.q_nom - self.q))
-            # self._set_target(
-            #     np.random.uniform(-1,1),
-            #     np.random.uniform(-1,1),
-            #     np.random.uniform(-1,1),
-            #     0,0,0,1
-            # )
-            q = self.q + qdot*dt
-            self.q = q
-            self.chain.setjoints(self.q)
-        else:
-            qdot3 = (self.q_nom - self.q)
+        if self.reach_status:
+
+            if len(self.segments)==0:
+                qdot += (np.eye(J_all.shape[1])- Jinv @ J_all) @ (self.lam*(self.q_nom - self.q))
+                # self._set_target(
+                #     np.random.uniform(-1,1),
+                #     np.random.uniform(-1,1),
+                #     np.random.uniform(-1,1),
+                #     0,0,0,1
+                # )
+                q = self.q + qdot*dt
+                self.q = q
+                self.chain.setjoints(self.q)
+            else:
+                qdot3 = (self.q_nom - self.q)
+                
+                J2 = np.vstack((self.chain.Jv(),self.chain.Jw()))
+                Jinv2 = np.linalg.pinv(J2,0.1)
+                (xd, xdot) = self.segments[0][0].evaluate(tabsolute - self.t0)
+                (theta_d, wd) = self.segments[0][1].evaluate(tabsolute - self.t0)
+                eh = self.segments[0][2]
+                R0 = self.segments[0][3]
+                Rd = R0 @ Rote(eh,theta_d)
+                wd = R0 @ eh * wd
+                xd2 = np.vstack((xdot,wd))
+                # print('xd2',xd2)
+                # print('err',self.err)
+                # qdot2 = Jinv2 @ (xd2 + self.err) #+ (np.eye(J2.shape[1])- Jinv2 @ J2) @ qdot3 * self.lam
+                # qdot += (np.eye(J_all.shape[1])- Jinv @ J_all) @ (qdot2)
+                # qdot2 = qdot + (np.eye(J_all.shape[1])- Jinv @ J_all) @ qdot3 * self.lam
+                # qdot = Jinv2 @ (xd2 + self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ (qdot)
+
+                # qdot2 =  Jinv2 @ (xd2 + self.err)+ (np.eye(J2.shape[1])- Jinv2 @ J2)  @ qdot3 * self.lam
+                # qdot = Jinv @ (self.lam*eRR) + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot2)
+                # qdot2 = Jinv @ (self.lam*eRR) + (np.eye(J_all.shape[1])- Jinv @ J_all) @ qdot3 * self.lam
+                # qdot = Jinv2 @ (xd2 + self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ (qdot2)
+                # qdot2 = qdot + (np.eye(J_all.shape[1])- Jinv @ J_all) @ qdot3 * self.lam
+                # qdot = Jinv2 @ (xd2 + self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ (qdot2)
+
+                # two primary task
+                # eRR = np.append(eRR, (xd2 + 10*self.err), axis=0)
+                # J_all = np.append(J_all,J2,axis=0)
+                # Jinv = np.linalg.pinv(J_all,0.01)
+                # qdot = Jinv @ (eRR) + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot3)
+
+                # avoid -> traj
+                qdot2 = Jinv2 @ (xd2 + 10*self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ qdot3
+                Jinv = np.linalg.pinv(J_all,0.01)
+                qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot2)
+
+                q = self.q + qdot*dt
+                self.q = q
+                self.chain.setjoints(self.q)
             
-            J2 = np.vstack((self.chain.Jv(),self.chain.Jw()))
-            Jinv2 = np.linalg.pinv(J2,0.1)
-            (xd, xdot) = self.segments[0][0].evaluate(tabsolute - self.t0)
-            (theta_d, wd) = self.segments[0][1].evaluate(tabsolute - self.t0)
-            eh = self.segments[0][2]
-            R0 = self.segments[0][3]
-            Rd = R0 @ Rote(eh,theta_d)
-            wd = R0 @ eh * wd
-            xd2 = np.vstack((xdot,wd))
-            # print('xd2',xd2)
-            # print('err',self.err)
-            # qdot2 = Jinv2 @ (xd2 + self.err) #+ (np.eye(J2.shape[1])- Jinv2 @ J2) @ qdot3 * self.lam
-            # qdot += (np.eye(J_all.shape[1])- Jinv @ J_all) @ (qdot2)
-            # qdot2 = qdot + (np.eye(J_all.shape[1])- Jinv @ J_all) @ qdot3 * self.lam
-            # qdot = Jinv2 @ (xd2 + self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ (qdot)
+                self.err = np.vstack((ep(xd,self.chain.ptip()), eR(Rd,self.chain.Rtip())))
+                self.check_touch()
 
-            # qdot2 =  Jinv2 @ (xd2 + self.err)+ (np.eye(J2.shape[1])- Jinv2 @ J2)  @ qdot3 * self.lam
-            # qdot = Jinv @ (self.lam*eRR) + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot2)
-            # qdot2 = Jinv @ (self.lam*eRR) + (np.eye(J_all.shape[1])- Jinv @ J_all) @ qdot3 * self.lam
-            # qdot = Jinv2 @ (xd2 + self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ (qdot2)
-            # qdot2 = qdot + (np.eye(J_all.shape[1])- Jinv @ J_all) @ qdot3 * self.lam
-            # qdot = Jinv2 @ (xd2 + self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ (qdot2)
+        else:
 
-            # two primary task
-            # eRR = np.append(eRR, (xd2 + 10*self.err), axis=0)
-            # J_all = np.append(J_all,J2,axis=0)
-            # Jinv = np.linalg.pinv(J_all,0.01)
-            # qdot = Jinv @ (eRR) + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot3)
-
-            # avoid -> traj
-            qdot2 = Jinv2 @ (xd2 + 10*self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ qdot3
-            Jinv = np.linalg.pinv(J_all,0.01)
-            qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot2)
+            qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all) @ (self.lam*(self.q_nom - self.q))
 
             q = self.q + qdot*dt
             self.q = q
             self.chain.setjoints(self.q)
-        
-            self.err = np.vstack((ep(xd,self.chain.ptip()), eR(Rd,self.chain.Rtip())))
-            self.check_touch()
 
             
 
