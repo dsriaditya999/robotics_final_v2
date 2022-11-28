@@ -98,6 +98,14 @@ def generate_launch_description():
         # output     = 'screen',
         on_exit    = Shutdown())
 
+    node_rqt = Node(
+        name='rqt_plots',
+        package = 'rqt_plot',
+        executable = 'rqt_plot',
+        output     = 'screen',
+        arguments ='/collision/data[0] /touch_target/data[0] /touch_target/data[1]',
+        on_exit    = Shutdown())
+
 
 
     ######################################################################
@@ -112,5 +120,6 @@ def generate_launch_description():
         node_urdf,
         node_publisher,
         node_joint_test6,
-        node_joint_marker
+        node_joint_marker,
+        node_rqt
     ])

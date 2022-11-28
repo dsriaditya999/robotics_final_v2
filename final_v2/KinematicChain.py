@@ -222,6 +222,7 @@ class KinematicChain():
 
         # Also save the tip transform.
         self.data.Ttip = T
+    
 
 
     # Extract the position/orientation data from the already computed
