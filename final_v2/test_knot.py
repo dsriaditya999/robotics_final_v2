@@ -13,6 +13,7 @@
 
 import rclpy
 import numpy as np
+import math
 
 from asyncio            import Future
 from rclpy.node         import Node
@@ -95,12 +96,32 @@ class Trajectory():
         return xyz_goal
 
 
-    def tie_knot(self):
+    def tie_knot(self, step=1.):
+        x_tips = np.empty((0,1))
+        J_tips = np.empty((0,41))
+        g_tips = np.empty((0,1))
+        base = self.pgoal[:3]*1
+
+        step = step*1.5
+        if step>1: step=1
+
+        start_point = round( self.startpoint * step + (self.chain.dofs-1) * (1-step) )
+        base *= (start_point-self.startpoint)/self.startpoint
+        for i in range(start_point, min( start_point + self.Node, self.chain.dofs)):
+            x_tips = np.append(x_tips, p_from_T(self.chain.data.T[i]), axis=0)
+            J_tips = np.append(J_tips, self.chain.Jv_tip(i), axis=0)
+            j = i-start_point
+            g_tips = np.append(g_tips, (self.pgoal[3*j:3*j+3]+base).reshape((3,1)), axis=0)
+        
+        Jinv = np.linalg.pinv(J_tips, 0.01)
+        qdot3 = self.q_nom - self.q
+        qdot = Jinv @ (g_tips - x_tips) + (np.eye(J_tips.shape[1])- Jinv @ J_tips) @ qdot3
+        return qdot
         x_tips = np.empty((0,1))
         J_tips = np.empty((0,41))
 
         start_point = self.startpoint
-        for i in range(start_point,start_point + self.Node):
+        for i in range(start_point, start_point + self.Node):
             x_tips = np.append(x_tips, p_from_T(self.chain.data.T[i]), axis=0)
             J_tips = np.append(J_tips, self.chain.Jv_tip(i), axis=0)
 
@@ -147,10 +168,12 @@ class Trajectory():
 
 
     def evaluate(self, tabsolute, dt):
-        if tabsolute%20<6:
+        T = 30
+        duty = 20
+        if tabsolute%T<duty:
             if self.setting:
                 self.setup()
-            qdot = self.tie_knot()
+            qdot = self.tie_knot((tabsolute%T)/duty)
         else:
             self.setting = True
             qdot = self.solve_knot()
