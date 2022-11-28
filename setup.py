@@ -33,6 +33,8 @@ setup(
             'target_marker = final_v2.target_marker:main',
             'test6 = final_v2.test6:main',
             'test7 = final_v2.test7:main',
+            'testk = final_v2.test_knot:main',
+            
         ],
     },
 )

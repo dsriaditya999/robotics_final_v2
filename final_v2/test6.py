@@ -23,7 +23,7 @@ from hw3code.Segments   import Hold, Stay, GotoCubic, SplineCubic
 # from hw4code.hw4p3      import fkin, Jac
 
 from final_v2.GeneratorNode     import GeneratorNode
-from hw6code.KinematicChain    import KinematicChain
+from final_v2.KinematicChain    import KinematicChain
 from hw5code.TransformHelpers  import *
 from std_msgs.msg       import Bool
 #
