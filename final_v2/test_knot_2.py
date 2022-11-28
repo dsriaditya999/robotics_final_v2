@@ -40,7 +40,9 @@ class Trajectory():
         self.q_nom = np.radians(np.array([0]*41).reshape((-1,1)))
         # self.q_nom[0,0] = np.pi/2
 
-        self.setup()
+        self.setting = True
+
+        #self.setup()
 
 
     def setup(self):
@@ -96,17 +98,28 @@ class Trajectory():
 
 
     def tie_knot(self):
-        x_tips = np.empty((0,1))
-        J_tips = np.empty((0,41))
 
-        start_point = self.startpoint
-        for i in range(start_point,start_point + self.Node):
-            x_tips = np.append(x_tips, p_from_T(self.chain.data.T[i]), axis=0)
-            J_tips = np.append(J_tips, self.chain.Jv_tip(i), axis=0)
+        q0 = self.q
+        q = {}
+        q[0] = q0
 
-        Jinv = np.linalg.pinv(J_tips, 0.01)
-        qdot = Jinv @ (self.pgoal - x_tips)
-        return qdot
+        for j in range(100):
+            x_tips = np.empty((0,1))
+            J_tips = np.empty((0,41))
+
+            start_point = self.startpoint
+            for i in range(start_point,start_point + self.Node):
+                x_tips = np.append(x_tips, p_from_T(self.chain.data.T[i]), axis=0)
+                J_tips = np.append(J_tips, self.chain.Jv_tip(i), axis=0)
+
+            Jinv = np.linalg.pinv(J_tips, 0.01)
+            # qdot = Jinv @ (self.pgoal - x_tips)
+            q[j+1] = q[j] + 0.1*Jinv @ (self.pgoal - x_tips)
+
+            self.chain.setjoints(q[j+1])
+
+
+        return q[100]
     
     def solve_knot(self):
         qdot3 = self.q_nom - self.q
@@ -147,17 +160,22 @@ class Trajectory():
 
 
     def evaluate(self, tabsolute, dt):
-        if tabsolute%20<6:
+        if tabsolute%15<6:
             if self.setting:
                 self.setup()
-            qdot = self.tie_knot()
+                q = self.tie_knot()
+            else:
+                q = self.q
+            qdot = np.zeros((41,1))
+            self.q = q
+            self.chain.setjoints(self.q)
+
         else:
             self.setting = True
             qdot = self.solve_knot()
-        
-        q = self.q + qdot*dt
-        self.q = q
-        self.chain.setjoints(self.q)
+            q = self.q + qdot*dt
+            self.q = q
+            self.chain.setjoints(self.q)
 
         return (q.flatten().tolist(), qdot.flatten().tolist())
 
