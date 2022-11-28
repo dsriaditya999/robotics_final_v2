@@ -103,7 +103,7 @@ def generate_launch_description():
         package = 'rqt_plot',
         executable = 'rqt_plot',
         output     = 'screen',
-        arguments ='/collision/data[0] /touch_target/data[0] /touch_target/data[1]',
+        arguments =['/collision/data[0]','/touch_target/data[0]','/touch_target/data[1]'],
         on_exit    = Shutdown())
 
 

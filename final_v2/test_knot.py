@@ -21,7 +21,7 @@ from sensor_msgs.msg    import JointState
 from std_msgs.msg import Int32MultiArray
 
 from hw3code.Segments   import Hold, Stay, GotoCubic, SplineCubic
-# from hw4code.hw4p3      import fkin, Jac
+
 
 from final_v2.GeneratorNode     import GeneratorNode
 from final_v2.KinematicChain    import KinematicChain
