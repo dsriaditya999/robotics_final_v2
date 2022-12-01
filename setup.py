@@ -39,7 +39,7 @@ setup(
             'testk2 = final_v2.test_knot_2:main',
             'test8 = final_v2.test8:main',
             'test1_t4 = final_v2.test1_t4:main',
-            
+            'test2_t4 = final_v2.test2_t4:main',
         ],
     },
 )

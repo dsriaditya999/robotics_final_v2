@@ -150,38 +150,7 @@ class Trajectory():
         Rf = R_from_quat(np.array(self.quat))
 
         xdot = ep(xf, x0)
-        # xdn = np.linalg.norm(xdot)
-        # # if 1 * dt< xdn:
-        # #     xdot/=xdn
-        # # else:
-        # #     xdot /= dt*100
-        
-        # R0f = Rf.T @ R0
-        # u = np.array([
-        #     [R0f[2,1]-R0f[1,2]],
-        #     [R0f[0,2]-R0f[2,0]],
-        #     [R0f[1,0]-R0f[0,1]]
-        # ])
-        # un = np.linalg.norm(u)
-        # if un<1e-5:
-        #     w,v = np.linalg.eig( R0f )
-        #     u = v[:,2].reshape((3,1))
-        #     u = np.real(u)
-        # else:
-        #     u/=un
-        # alpha = np.arccos((np.trace(R0f)-1)/2)
-        # # R0 @ R(e,alpha) = Rf -> RfT @ R0 = R(e,-alpha)
-        # if not np.allclose(Rote(u,-alpha),R0f):
-        #     alpha = -alpha
-        
         eR_R = eR(Rf,R0)
-        # if 1*dt < np.abs(alpha):
-        #     alpha /= alpha
-        #     eR_R /= np.linalg.norm(eR_R)
-        # else:
-        #     alpha /= dt*100
-        # wd = R0 @ u * alpha
-
         return xdot, eR_R
 
     def set_goal(self, pos):

@@ -39,7 +39,7 @@ class Trajectory():
         
         self.q_nom = np.radians(np.array([0]*41).reshape((-1,1)))
         # self.q_nom[0,0] = np.pi/2
-        self.pub = node.create_publisher(Int32MultiArray, '/self_collision', 10)
+        self.publisher_5 = node.create_publisher(Int32MultiArray, '/self_collision', 10)
         self.self_collision = Int32MultiArray()
         self.self_collision.data = [0]
         self.q_nom[0,0] = np.pi/2
@@ -181,7 +181,7 @@ class Trajectory():
             self.q = q
             self.chain.setjoints(self.q)
 
-        self.pub.publish(self.self_collision)
+        self.publisher_5.publish(self.self_collision)
 
         return (q.flatten().tolist(), qdot.flatten().tolist())
 

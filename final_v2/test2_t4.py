@@ -26,6 +26,8 @@ from final_v2.GeneratorNode     import GeneratorNode
 from final_v2.KinematicChain    import KinematicChain
 from hw5code.TransformHelpers  import *
 from std_msgs.msg       import Bool
+from geometry_msgs.msg       import Pose
+
 #
 #   Trajectory Class
 #
@@ -47,7 +49,12 @@ class Trajectory():
         self.target_touched = 0
         self.target_total = 0
 
-        self.publisher_3 = node.create_publisher(Bool, 'phase', 10)
+        self.publisher_3 = node.create_publisher(Pose, 'set_random_target', 10)
+        self.publisher_4 = node.create_publisher(Bool, 'phase', 10)
+
+        self.publisher_5 = node.create_publisher(Int32MultiArray, '/self_collision', 10)
+        self.self_collision = Int32MultiArray()
+        self.self_collision.data = [0]
 
         self.chain.setjoints(self.q)
         #self.segments = [Hold(self.q, 1.0),GotoCubic(q1, q2, 1.0),GotoCubic(q2, q1, 1.0)]
@@ -71,7 +78,7 @@ class Trajectory():
             10
         )
 
-        self.pos = [3,0,0]
+        self.pos = [-3.,0.,0.]
         self.quat = [1.,0.,0.,0.]
         self.node = node
         self.reach_status = True
@@ -84,6 +91,7 @@ class Trajectory():
         self.startpoint = np.random.randint(1,41-self.Node)
         xyzgoal = self.findgoal(self.Node, self.startpoint)
         self.pgoal = xyzgoal.flatten('F').reshape((self.Node *3,1))
+        self.self_collision.data = [0]
         self.setting = False
 
 
@@ -95,7 +103,8 @@ class Trajectory():
             #self.node.get_logger().info('getting target?')
             
             #self.node.get_logger().info(str(msg.data))
-            self._set_target(self.pos, self.quat)
+            # self._set_target(self.pos, self.quat)
+            pass
 
     # Declare the joint names.
     def jointnames(self):
@@ -177,6 +186,7 @@ class Trajectory():
         for dof in range(self.chain.dofs):
             p_joints = np.append(p_joints, p_from_T(self.chain.data.T[dof]), axis=1)
         
+        self_collision = 0
         J_all = np.empty((0,41))
         x_repulsive = np.empty((0,1))
         for i in range(p_joints.shape[1]-1):
@@ -187,11 +197,8 @@ class Trajectory():
                 proj = np.dot(dP,dPj)/dP_norm
                 perpend = dPj-dP/dP_norm*proj
                 if proj>0 and proj<dP_norm and np.linalg.norm(perpend)<0.2:
-                    # xj_rep = 0.05* perpend/np.linalg.norm(perpend)**2
-                    # if proj<dP_norm/2:
-                    #     # xj_rep += -0.1*dP/dP_norm
-                    # else:
-                    #     xj_rep += 0.1*dP/dP_norm
+                    if np.linalg.norm(perpend)<0.072:
+                        self_collision += 1
                     xj_rep = p_joints[:,j]-0.5*(p_joints[:,i+1]+p_joints[:,i])
                     xj_rep /= np.linalg.norm(perpend)**2
                     xj_rep *= 0.05
@@ -200,6 +207,7 @@ class Trajectory():
                     x_repulsive = np.append(x_repulsive, xj_rep.reshape((3,1)), axis=0)
                     J_all = np.append(J_all, Jj, axis=0)
         
+        self.self_collision.data = [self_collision]
         Jinv = np.linalg.pinv(J_all, 0.01)
         qdot = Jinv @ x_repulsive + (np.eye(J_all.shape[1])- Jinv @ J_all) @ qdot2
                 
@@ -208,8 +216,9 @@ class Trajectory():
 
     def set_target(self,pos,quat):
         #self.node.get_logger().info(str(pos.x))
-        self.pos = [pos.x,pos.y,pos.z]
-        self.quat = [quat.w,quat.x,quat.y,quat.z]
+        # self.pos = [pos.x,pos.y,pos.z]
+        # self.quat = [quat.w,quat.x,quat.y,quat.z]
+        pass
 
     def _set_target(self, pos, quat):
         # print('target (%f,%f,%f)'%(x,y,z))
@@ -242,6 +251,25 @@ class Trajectory():
         rspline = GotoCubic(0,alpha,6)
         self.segments.append([xspline,rspline,u,R0])
 
+        pose = Pose()
+        pose.position.x = pos[0]
+        pose.position.y = pos[1]
+        pose.position.z = pos[2]
+        pose.orientation.w = quat[0]
+        pose.orientation.x = quat[1]
+        pose.orientation.y = quat[2]
+        pose.orientation.z = quat[3]
+        self.publisher_3.publish(pose)
+    
+    def step(self, dt):
+        x0 = self.chain.ptip()
+        R0 = self.chain.Rtip()
+        xf = np.array(self.pos).reshape((3,1))
+        Rf = R_from_quat(np.array(self.quat))
+
+        xdot = ep(xf, x0)
+        eR_R = eR(Rf,R0)
+        return xdot, eR_R
 
     def set_goal(self, pos):
         self.goal_list = []
@@ -264,17 +292,24 @@ class Trajectory():
             msg.data = [self.target_touched, self.target_total]
             self.publisher_2.publish(msg)
             seg = self.segments.pop(0)
-            # self._set_target(
-            #     np.random.uniform(-1,1),
-            #     np.random.uniform(-1,1),
-            #     np.random.uniform(-1,1),
-            #     0,0,0,1
-            # )
+            u,v,w = np.random.uniform(0,1,3)
+            quat = [
+                np.sqrt(1-u)*np.sin(2*np.pi*v),
+                np.sqrt(1-u)*np.cos(2*np.pi*v),
+                np.sqrt(u)*np.sin(2*np.pi*w),
+                np.sqrt(u)*np.cos(2*np.pi*w),
+            ]
+            self._set_target(
+                [np.random.uniform(-1,1),
+                np.random.uniform(-1,1),
+                np.random.uniform(-1,1)],
+                quat
+            )
     # Evaluate at the given time.
     def evaluate(self, tabsolute, dt):
         
         self.ta = tabsolute
-
+        phase = Bool()
 
         if self.ta%25<=4:
             if self.setting:
@@ -286,18 +321,17 @@ class Trajectory():
             self.q = q
             self.chain.setjoints(self.q)
 
-            msg = Bool()
-            msg.data = False
-            self.publisher_3.publish(msg)
+            phase.data = False
+            self.segments = []
+            
 
         # Case-1 : You are in a knot intially and you have to come out while avoiding obstacles
 
         # Primary Task - Untangle, Secondary Task - Avoid Collisions, Tertiary Task - Pull to nominal
 
         else:
-            msg = Bool()
-            msg.data = True
-            self.publisher_3.publish(msg)
+            
+            phase.data = True
 
             qdot = np.zeros((41,1))
             J_all = np.empty((0,41))
@@ -326,11 +360,7 @@ class Trajectory():
                 else:
                     collision_arr.data.append(0)
 
-                #Stack the primary task quantities
-                # pd_all = np.append(pd_all,pd[:2,:],axis=0)
-
-                # p_tips_all = np.append(p_tips_all, p_from_T(self.chain.data.T[tip_dof]).reshape((3,1))[:2,:],axis=0)
-
+                
                 pd_tip = p_from_T(self.chain.data.T[tip_dof]).reshape((3,1))
 
                 if pd[2][0]<pd_tip[2][0]:
@@ -375,8 +405,23 @@ class Trajectory():
                 if self.reach_status:
 
                     if len(self.segments)==0:
-                        qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all) @ (self.lam*(self.q_nom - self.q))
+                        qdot3 = (self.q_nom - self.q)
+                
+                        J2 = np.vstack((self.chain.Jv(),self.chain.Jw()))
+                        Jinv2 = np.linalg.pinv(J2,0.01)
+                        (xdot, wd) = self.step(dt)
+                        xd2 = np.vstack((xdot,wd))
+                        qdot2 = Jinv2 @ xd2 + (np.eye(J2.shape[1])- Jinv2 @ J2) @ qdot3
 
+                        Jinv = np.linalg.pinv(J_all,0.01)
+                        qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot2)
+                        
+                        self._set_target(
+                            [np.random.uniform(-1,1),
+                            np.random.uniform(-1,1),
+                            np.random.uniform(-1,1)],
+                            [1.,0.,0.,0.]
+                        )
                         q = self.q + qdot*dt
                         self.q = q
                         self.chain.setjoints(self.q)
@@ -413,8 +458,10 @@ class Trajectory():
                     q = self.q + qdot*dt
                     self.q = q
                     self.chain.setjoints(self.q)
-                        
 
+        self.publisher_4.publish(phase)                
+        self.publisher_5.publish(self.self_collision)
+        
         return (q.flatten().tolist(), qdot.flatten().tolist())
 
 
