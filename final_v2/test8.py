@@ -26,6 +26,8 @@ from final_v2.GeneratorNode     import GeneratorNode
 from final_v2.KinematicChain    import KinematicChain
 from hw5code.TransformHelpers  import *
 from std_msgs.msg       import Bool
+from geometry_msgs.msg       import Pose
+
 #
 #   Trajectory Class
 #
@@ -44,6 +46,8 @@ class Trajectory():
         self.publisher_2 = node.create_publisher(Int32MultiArray, 'touch_target', 10)
         self.target_touched = 0
         self.target_total = 0
+
+        self.publisher_3 = node.create_publisher(Pose, 'set_random_target', 10)
 
         self.chain.setjoints(self.q)
         #self.segments = [Hold(self.q, 1.0),GotoCubic(q1, q2, 1.0),GotoCubic(q2, q1, 1.0)]
@@ -94,8 +98,9 @@ class Trajectory():
 
     def set_target(self,pos,quat):
         #self.node.get_logger().info(str(pos.x))
-        self.pos = [pos.x,pos.y,pos.z]
-        self.quat = [quat.w,quat.x,quat.y,quat.z]
+        # self.pos = [pos.x,pos.y,pos.z]
+        # self.quat = [quat.w,quat.x,quat.y,quat.z]
+        pass
 
     def _set_target(self, pos, quat):
         # print('target (%f,%f,%f)'%(x,y,z))
@@ -127,6 +132,16 @@ class Trajectory():
 
         rspline = GotoCubic(0,alpha,6)
         self.segments.append([xspline,rspline,u,R0])
+
+        pose = Pose()
+        pose.position.x = pos[0]
+        pose.position.y = pos[1]
+        pose.position.z = pos[2]
+        pose.orientation.w = quat[0]
+        pose.orientation.x = quat[1]
+        pose.orientation.y = quat[2]
+        pose.orientation.z = quat[3]
+        self.publisher_3.publish(pose)
 
     def step(self, dt):
         x0 = self.chain.ptip()
@@ -190,12 +205,19 @@ class Trajectory():
             msg.data = [self.target_touched, self.target_total]
             self.publisher_2.publish(msg)
             seg = self.segments.pop(0)
-            # self._set_target(
-            #     np.random.uniform(-1,1),
-            #     np.random.uniform(-1,1),
-            #     np.random.uniform(-1,1),
-            #     0,0,0,1
-            # )
+            u,v,w = np.random.uniform(0,1,3)
+            quat = [
+                np.sqrt(1-u)*np.sin(2*np.pi*v),
+                np.sqrt(1-u)*np.cos(2*np.pi*v),
+                np.sqrt(u)*np.sin(2*np.pi*w),
+                np.sqrt(u)*np.cos(2*np.pi*w),
+            ]
+            self._set_target(
+                [np.random.uniform(-1,1),
+                np.random.uniform(-1,1),
+                np.random.uniform(-1,1)],
+                quat
+            )
     
     # Evaluate at the given time.
     def evaluate(self, tabsolute, dt):
@@ -272,12 +294,12 @@ class Trajectory():
                 Jinv = np.linalg.pinv(J_all,0.01)
                 qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot2)
                 
-                # self._set_target(
-                #     np.random.uniform(-1,1),
-                #     np.random.uniform(-1,1),
-                #     np.random.uniform(-1,1),
-                #     0,0,0,1
-                # )
+                self._set_target(
+                    [np.random.uniform(-1,1),
+                    np.random.uniform(-1,1),
+                    np.random.uniform(-1,1)],
+                    [1.,0.,0.,0.]
+                )
                 q = self.q + qdot*dt
                 self.q = q
                 self.chain.setjoints(self.q)

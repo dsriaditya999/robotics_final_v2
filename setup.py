@@ -31,11 +31,12 @@ setup(
             'test3 = final_v2.test3:main',
             'reach_target_control = final_v2.reach_target_control:main',
             'target_marker = final_v2.target_marker:main',
+            'target_random = final_v2.target_random:main',
             'test6 = final_v2.test6:main',
             'test7 = final_v2.test7:main',
             'testk = final_v2.test_knot:main',
             'testk2 = final_v2.test_knot_2:main',
-            
+            'test8 = final_v2.test8:main',
         ],
     },
 )

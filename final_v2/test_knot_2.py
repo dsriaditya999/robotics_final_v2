@@ -39,6 +39,9 @@ class Trajectory():
         
         self.q_nom = np.radians(np.array([0]*41).reshape((-1,1)))
         # self.q_nom[0,0] = np.pi/2
+        self.pub = node.create_publisher(Int32MultiArray, '/self_collision', 10)
+        self.self_collision = Int32MultiArray()
+        self.self_collision.data = [0]
 
         self.setting = True
 
@@ -51,6 +54,7 @@ class Trajectory():
         self.startpoint = np.random.randint(1,41-self.Node)
         xyzgoal = self.findgoal(self.Node, self.startpoint)
         self.pgoal = xyzgoal.flatten('F').reshape((self.Node *3,1))
+        self.self_collision.data = [0]
         self.setting = False
 
     # Declare the joint names.
@@ -130,6 +134,7 @@ class Trajectory():
         for dof in range(self.chain.dofs):
             p_joints = np.append(p_joints, p_from_T(self.chain.data.T[dof]), axis=1)
         
+        self_collision = 0
         J_all = np.empty((0,41))
         x_repulsive = np.empty((0,1))
         for i in range(p_joints.shape[1]-1):
@@ -140,11 +145,8 @@ class Trajectory():
                 proj = np.dot(dP,dPj)/dP_norm
                 perpend = dPj-dP/dP_norm*proj
                 if proj>0 and proj<dP_norm and np.linalg.norm(perpend)<0.2:
-                    # xj_rep = 0.05* perpend/np.linalg.norm(perpend)**2
-                    # if proj<dP_norm/2:
-                    #     # xj_rep += -0.1*dP/dP_norm
-                    # else:
-                    #     xj_rep += 0.1*dP/dP_norm
+                    if np.linalg.norm(perpend)<0.072:
+                        self_collision += 1
                     xj_rep = p_joints[:,j]-0.5*(p_joints[:,i+1]+p_joints[:,i])
                     xj_rep /= np.linalg.norm(perpend)**2
                     xj_rep *= 0.05
@@ -153,6 +155,7 @@ class Trajectory():
                     x_repulsive = np.append(x_repulsive, xj_rep.reshape((3,1)), axis=0)
                     J_all = np.append(J_all, Jj, axis=0)
         
+        self.self_collision.data = [self_collision]
         Jinv = np.linalg.pinv(J_all, 0.01)
         qdot = Jinv @ x_repulsive + (np.eye(J_all.shape[1])- Jinv @ J_all) @ qdot3
                 
@@ -176,6 +179,8 @@ class Trajectory():
             q = self.q + qdot*dt
             self.q = q
             self.chain.setjoints(self.q)
+
+        self.pub.publish(self.self_collision)
 
         return (q.flatten().tolist(), qdot.flatten().tolist())
 
