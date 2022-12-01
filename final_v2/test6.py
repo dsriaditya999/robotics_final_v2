@@ -264,7 +264,9 @@ class Trajectory():
         if self.reach_status:
 
             if len(self.segments)==0:
-                qdot += (np.eye(J_all.shape[1])- Jinv @ J_all) @ (self.lam*(self.q_nom - self.q))
+
+                qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all) @ (self.lam*(self.q_nom - self.q))
+                # qdot = (np.eye(J_all.shape[1])- Jinv @ J_all) @ (self.lam*(self.q_nom - self.q))
                 # self._set_target(
                 #     np.random.uniform(-1,1),
                 #     np.random.uniform(-1,1),

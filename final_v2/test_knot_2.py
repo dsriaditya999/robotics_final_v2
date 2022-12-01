@@ -38,7 +38,7 @@ class Trajectory():
         self.qdot = np.radians(np.array([0]*41).reshape((-1,1)))
         
         self.q_nom = np.radians(np.array([0]*41).reshape((-1,1)))
-        # self.q_nom[0,0] = np.pi/2
+        self.q_nom[0,0] = np.pi/2
 
         self.setting = True
 
