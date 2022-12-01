@@ -39,26 +39,29 @@ class TargetMarker:
         mark.id = 0
         mark.ns = 'random_marker'
         mark.action = Marker.ADD
+        mark.type               = Marker.MESH_RESOURCE
+        mark.mesh_resource      = "package://final_v2/meshes/textured.dae"
+        mark.mesh_use_embedded_materials = True
         # mark.type = Marker.MESH_RESOURCE
         # mark.mesh_resource = "package://final_v1/meshes/Rock.stl"
-        mark.type = 1
-        mark.color.a = 1.
-        mark.color.r = 0.
-        mark.color.g = 1.
-        mark.color.b = 1.
+        # mark.type = 1
+        # mark.color.a = 1.
+        # mark.color.r = 0.
+        # mark.color.g = 1.
+        # mark.color.b = 1.
 
         mark.header.frame_id = "/world"
-        mark.scale.x = 0.1
-        mark.scale.y = 0.1
-        mark.scale.z = 0.1
+        mark.scale.x = 2.0
+        mark.scale.y = 2.0
+        mark.scale.z = 2.0
         
         mark.pose.position.x = 0.
         mark.pose.position.y = 0.
         mark.pose.position.z = 0.
         mark.pose.orientation.x = 0.
         mark.pose.orientation.y = 0.
-        mark.pose.orientation.z = 0.
-        mark.pose.orientation.w = 1.
+        mark.pose.orientation.z = -0.216
+        mark.pose.orientation.w = 0.976
 
         self.marker = mark
 
