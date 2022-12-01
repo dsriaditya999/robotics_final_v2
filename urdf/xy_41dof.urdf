@@ -936,7 +936,7 @@
     <visual>
       <origin         xyz=" 0.04   0    0"    rpy="0 0 0"/>
       <geometry> <box size="0.0202 0.09 0.09"/> </geometry>
-      <material name="red"/>
+      <material name="blue"/>
     </visual>
   </link>
 
@@ -948,7 +948,7 @@
     <visual>
       <origin         xyz="-0.04   0    0"    rpy="0 0 0"/>
       <geometry> <box size="0.0202 0.09 0.09"/> </geometry>
-      <material name="cyan"/>
+      <material name="green"/>
     </visual>
   </link>
 
@@ -960,7 +960,7 @@
     <visual>
       <origin         xyz=" 0    0.04   0"    rpy="0 0 0"/>
       <geometry> <box size="0.09 0.0202 0.09"/> </geometry>
-      <material name="green"/>
+      <material name="white"/>
     </visual>
   </link>
 
@@ -972,7 +972,7 @@
     <visual>
       <origin         xyz=" 0   -0.04   0"    rpy="0 0 0"/>
       <geometry> <box size="0.09 0.0202 0.09"/> </geometry>
-      <material name="magenta"/>
+      <material name="yellow"/>
     </visual>
   </link>
 
@@ -984,7 +984,7 @@
     <visual>
       <origin         xyz=" 0    0    0.04"   rpy="0 0 0"/>
       <geometry> <box size="0.09 0.09 0.0202"/> </geometry>
-      <material name="blue"/>
+      <material name="red"/>
     </visual>
   </link>
 
@@ -996,7 +996,7 @@
     <visual>
       <origin         xyz=" 0    0   -0.04"   rpy="0 0 0"/>
       <geometry> <box size="0.09 0.09 0.0202"/> </geometry>
-      <material name="yellow"/>
+      <material name="orange"/>
     </visual>
   </link>
 

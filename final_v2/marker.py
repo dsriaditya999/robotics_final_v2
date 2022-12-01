@@ -37,7 +37,7 @@ class MinimalPublisher(Node):
         self.subscription_1  # prevent unused variable warning
 
         self.marker_arr = MarkerArray()
-        self.marker_len = 4
+        self.marker_len = 0
         self.v = [0]*self.marker_len
         for i in range(self.marker_len):
             mark = Marker()

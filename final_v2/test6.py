@@ -100,13 +100,16 @@ class Trajectory():
     def _set_target(self, pos, quat):
         # print('target (%f,%f,%f)'%(x,y,z))
         self.t0 = self.ta
-        xspline = GotoCubic( self.chain.ptip(), np.array([[pos[0]],[pos[1]],[pos[2]]]),6,space='Tip')
+        xspline = GotoCubic( self.chain.ptip(), np.array([[pos[0]-0.02],[pos[1]+0.02],[pos[2]-0.05]]),6,space='Tip')
         self.target_total += 1
 
         R0 = self.chain.Rtip()
-        Rf = R_from_quat(np.array(quat))
+        Rf = R_from_quat(np.array(quat)-np.array([  0.0,0.0,-0.216,  0.976]))#-np.array([  0.028,-0.127,-0.215,  0.968]))
         self.Rf = Rf
-        self.xf = np.array([[pos[0]],[pos[1]],[pos[2]]])
+
+        self.xf = np.array([[pos[0]-0.02],[pos[1]+0.02],[pos[2]-0.05]]) 
+
+        #print(self.xf)
         R0f = Rf.T @ R0
         u = np.array([
             [R0f[2,1]-R0f[1,2]],
