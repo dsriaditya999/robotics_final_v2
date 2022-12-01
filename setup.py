@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'marker = final_v2.marker:main',
+            'marker_orig = final_v2.marker_orig:main',
             'test2 = final_v2.test2:main',
             'marker3 = final_v2.marker3:main',
             'test3 = final_v2.test3:main',
@@ -37,6 +38,8 @@ setup(
             'testk = final_v2.test_knot:main',
             'testk2 = final_v2.test_knot_2:main',
             'test8 = final_v2.test8:main',
+            'test1_t4 = final_v2.test1_t4:main',
+            
         ],
     },
 )

@@ -43,7 +43,10 @@ class TargetMarker:
         self.marker.header.stamp       = node.get_clock().now().to_msg()
         self.marker.ns                 = "target"
         self.marker.id                 = 0
-        self.marker.type               = Marker.CUBE
+        #self.marker.type               = Marker.CUBE
+        self.marker.type               = Marker.MESH_RESOURCE
+        self.marker.mesh_resource      = "package://final_v2/meshes/cube.obj"
+        self.marker.mesh_use_embedded_materials = True
         self.marker.action             = Marker.ADD
         self.marker.pose.orientation.w =   1.
         self.marker.pose.orientation.x =   0.
@@ -52,13 +55,13 @@ class TargetMarker:
         self.marker.pose.position.x    =   0.
         self.marker.pose.position.y    =   0.
         self.marker.pose.position.z    =   0.
-        self.marker.scale.x            =   0.1
-        self.marker.scale.y            =   0.1
-        self.marker.scale.z            =   0.1
-        self.marker.color.r            =   0.             
-        self.marker.color.g            =   0.
-        self.marker.color.b            =   1.0
-        self.marker.color.a            =   1.0             # Make solid
+        self.marker.scale.x            =   2.0
+        self.marker.scale.y            =   2.0
+        self.marker.scale.z            =   2.0
+        # self.marker.color.r            =   0.             
+        # self.marker.color.g            =   0.
+        # self.marker.color.b            =   1.0
+        # self.marker.color.a            =   1.0             # Make solid
             
 
         # Create an interactive marker for our server at the position

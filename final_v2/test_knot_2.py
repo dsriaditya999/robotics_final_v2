@@ -42,6 +42,7 @@ class Trajectory():
         self.pub = node.create_publisher(Int32MultiArray, '/self_collision', 10)
         self.self_collision = Int32MultiArray()
         self.self_collision.data = [0]
+        self.q_nom[0,0] = np.pi/2
 
         self.setting = True
 

@@ -14,8 +14,16 @@ class MinimalPublisher(Node):
     def __init__(self):
         super().__init__('minimal_publisher')
         self.publisher_ = self.create_publisher(MarkerArray, 'markers_array', 10)
+        self.once_not_done = False
+        self.once_not_done_2 = True
+
+        self.starttime = self.get_clock().now()
+        self.servotime = self.starttime
         timer_period = 0.001  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.timer     = self.create_timer(timer_period, self.timer_callback)
+        self.t  = 0.0
+        self.dt = self.timer.timer_period_ns * 1e-9
+        
 
         self.chain = KinematicChain(Node('marker_chain'), 'world', 'tip', self.jointnames())
         self.q = np.radians(np.array([0]*41).reshape((-1,1)))
@@ -29,7 +37,7 @@ class MinimalPublisher(Node):
         self.subscription_1  # prevent unused variable warning
 
         self.marker_arr = MarkerArray()
-        self.marker_len = 2
+        self.marker_len = 4
         self.v = [0]*self.marker_len
         for i in range(self.marker_len):
             mark = Marker()
@@ -72,18 +80,55 @@ class MinimalPublisher(Node):
         self.q = msg.position
 
     def timer_callback(self):
-        dt = 0.001
-        for index in range(self.marker_len):
-            self.v[index]+=9.8*dt
-            self.marker_arr.markers[index].pose.position.z -= self.v[index]*dt
-            if self.marker_arr.markers[index].pose.position.z < -3.:
-                self.marker_arr.markers[index].pose.position.z = 4.+random.normal(0,1)
-                x, y = self.random_startpt()
-                self.marker_arr.markers[index].pose.position.x = x
-                self.marker_arr.markers[index].pose.position.y = y
-                self.v[index] = 0
+        # dt = 0.001
 
-        self.publisher_.publish(self.marker_arr)
+        # Grab the current time.
+        now = self.get_clock().now()
+        t   = (now - self.starttime).nanoseconds * 1e-9
+        dt  = (now - self.servotime).nanoseconds * 1e-9
+        self.servotime = now
+
+        # To avoid the time jitter introduced by an inconsistent timer,
+        # just enforce a constant time step and ignore the above.
+        self.t += self.dt
+        t  = self.t
+        dt = self.dt
+
+        if t%25>4:
+
+
+            if self.once_not_done_2:
+                for index in range(self.marker_len):
+                    self.marker_arr.markers[index].action = Marker.ADD
+                self.once_not_done_2 = False
+            else:
+                pass
+            
+            for index in range(self.marker_len):
+
+                self.v[index]+=9.8*dt
+                self.marker_arr.markers[index].pose.position.z -= self.v[index]*dt
+                if self.marker_arr.markers[index].pose.position.z < -3.:
+                    self.marker_arr.markers[index].pose.position.z = 4.+random.normal(0,1)
+                    x, y = self.random_startpt()
+                    self.marker_arr.markers[index].pose.position.x = x
+                    self.marker_arr.markers[index].pose.position.y = y
+                    self.v[index] = 0
+
+            self.publisher_.publish(self.marker_arr)
+            self.once_not_done =True
+
+        else:
+            if self.once_not_done:
+                for index in range(self.marker_len):
+                    self.marker_arr.markers[index].action = Marker.DELETE
+                self.once_not_done = False
+                self.once_not_done_2 = True
+            else:
+                pass
+
+
+
     
     def random_startpt(self):
         self.chain.setjoints(self.q)

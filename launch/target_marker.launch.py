@@ -92,9 +92,9 @@ def generate_launch_description():
         on_exit    = Shutdown())
 
     node_joint_marker = Node(
-        name       = 'marker', 
+        name       = 'marker_orig', 
         package    = 'final_v2',
-        executable = 'marker',
+        executable = 'marker_orig',
         # output     = 'screen',
         on_exit    = Shutdown())
 
