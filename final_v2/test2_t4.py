@@ -220,7 +220,19 @@ class Trajectory():
         # self.quat = [quat.w,quat.x,quat.y,quat.z]
         pass
 
-    def _set_target(self, pos, quat):
+    def _set_target(self, pos=None, quat=None):
+        if pos==None:
+            pos = [np.random.uniform(-1,1),
+                    np.random.uniform(-1,1),
+                    np.random.uniform(-1,1)]
+        if quat==None:
+            u,v,w = np.random.uniform(0,1,3)
+            quat = [
+                np.sqrt(1-u)*np.sin(2*np.pi*v),
+                np.sqrt(1-u)*np.cos(2*np.pi*v),
+                np.sqrt(u)*np.sin(2*np.pi*w),
+                np.sqrt(u)*np.cos(2*np.pi*w),
+            ]
         # print('target (%f,%f,%f)'%(x,y,z))
         self.t0 = self.ta
         xspline = GotoCubic( self.chain.ptip(), np.array([[pos[0]],[pos[1]],[pos[2]]]),6,space='Tip')
@@ -281,7 +293,7 @@ class Trajectory():
         x0 = self.chain.ptip()
         R0 = self.chain.Rtip()
         xf, Rf = self.xf, self.Rf
-        condition = [np.allclose(R0, Rf, atol=.1), np.allclose(x0, xf, atol=.1), self.ta>=self.t0+11]
+        condition = [np.allclose(R0, Rf, atol=.05), np.allclose(x0, xf, atol=.05), self.ta>=self.t0+11]
         if (condition[0] and condition[1]) or condition[2]:
             if condition[0] and condition[1]:
                 self.target_touched += 1
@@ -292,19 +304,7 @@ class Trajectory():
             msg.data = [self.target_touched, self.target_total]
             self.publisher_2.publish(msg)
             seg = self.segments.pop(0)
-            u,v,w = np.random.uniform(0,1,3)
-            quat = [
-                np.sqrt(1-u)*np.sin(2*np.pi*v),
-                np.sqrt(1-u)*np.cos(2*np.pi*v),
-                np.sqrt(u)*np.sin(2*np.pi*w),
-                np.sqrt(u)*np.cos(2*np.pi*w),
-            ]
-            self._set_target(
-                [np.random.uniform(-1,1),
-                np.random.uniform(-1,1),
-                np.random.uniform(-1,1)],
-                quat
-            )
+            self._set_target()
     # Evaluate at the given time.
     def evaluate(self, tabsolute, dt):
         
@@ -416,12 +416,7 @@ class Trajectory():
                         Jinv = np.linalg.pinv(J_all,0.01)
                         qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot2)
                         
-                        self._set_target(
-                            [np.random.uniform(-1,1),
-                            np.random.uniform(-1,1),
-                            np.random.uniform(-1,1)],
-                            [1.,0.,0.,0.]
-                        )
+                        self._set_target(quat=[1.,0.,0.,0.])
                         q = self.q + qdot*dt
                         self.q = q
                         self.chain.setjoints(self.q)

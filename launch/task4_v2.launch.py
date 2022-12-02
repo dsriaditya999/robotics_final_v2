@@ -85,9 +85,9 @@ def generate_launch_description():
     #     on_exit    = Shutdown())
 
     node_task4 = Node(
-        name       = 'test2_t4', 
+        name       = 'task4_clean', 
         package    = 'final_v2',
-        executable = 'test2_t4',
+        executable = 'task4_clean',
         output     = 'screen',
         on_exit    = Shutdown())
 
@@ -103,7 +103,7 @@ def generate_launch_description():
         package = 'rqt_plot',
         executable = 'rqt_plot',
         output     = 'screen',
-        arguments =['/collision/data[0]','/touch_target/data[0]','/touch_target/data[1]'],
+        arguments =['/collision/data[0]','/touch_target/data[0]','/touch_target/data[1]', '/self_collision/data[0]'],
         on_exit    = Shutdown())
 
 

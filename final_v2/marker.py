@@ -42,7 +42,7 @@ class MinimalPublisher(Node):
         self.phase = False
 
         self.marker_arr = MarkerArray()
-        self.marker_len = 1
+        self.marker_len = 0
         self.v = [0]*self.marker_len
         for i in range(self.marker_len):
             mark = Marker()

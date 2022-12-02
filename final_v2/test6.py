@@ -94,20 +94,25 @@ class Trajectory():
 
     def set_target(self,pos,quat):
         #self.node.get_logger().info(str(pos.x))
-        self.pos = [pos.x,pos.y,pos.z]
-        self.quat = [quat.w,quat.x,quat.y,quat.z]
+        quat = quat_from_R(
+            (R_from_quat(np.array([quat.w,quat.x,quat.y,quat.z])) @ R_from_quat(np.array([-0.976, 0., 0., +0.216]).T)).T
+        )
+        pos = np.array([pos.x,pos.y,pos.z]).reshape((3,1)) + R_from_quat(quat) @ np.array([-.02,+.02,+.05]).reshape((3,1))
+
+        self.pos = list(pos.reshape((3)))#[pos.x,pos.y,pos.z]
+        self.quat = quat#[quat.w,quat.x,quat.y,quat.z]
 
     def _set_target(self, pos, quat):
         # print('target (%f,%f,%f)'%(x,y,z))
         self.t0 = self.ta
-        xspline = GotoCubic( self.chain.ptip(), np.array([[pos[0]-0.02],[pos[1]+0.02],[pos[2]-0.05]]),6,space='Tip')
+        xspline = GotoCubic( self.chain.ptip(), np.array([[pos[0]],[pos[1]],[pos[2]]]),6,space='Tip')
         self.target_total += 1
 
         R0 = self.chain.Rtip()
-        Rf = R_from_quat(np.array(quat)-np.array([  0.0,0.0,-0.216,  0.976]))#-np.array([  0.028,-0.127,-0.215,  0.968]))
+        Rf = R_from_quat(np.array(quat))#-np.array([  0.0,0.0,-0.216,  0.976]))#-np.array([  0.028,-0.127,-0.215,  0.968]))
         self.Rf = Rf
 
-        self.xf = np.array([[pos[0]-0.02],[pos[1]+0.02],[pos[2]-0.05]]) 
+        self.xf = np.array([[pos[0]],[pos[1]],[pos[2]]]) 
 
         #print(self.xf)
         R0f = Rf.T @ R0
@@ -119,7 +124,8 @@ class Trajectory():
         un = np.linalg.norm(u)
         if un<1e-5:
             w,v = np.linalg.eig( R0f )
-            u = v[:,2].reshape((3,1))
+            index = np.argmin(np.abs(w-1.))
+            u = v[:,index].reshape((3,1))
             u = np.real(u)
         else:
             u/=un

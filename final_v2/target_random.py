@@ -49,15 +49,18 @@ class TargetMarker:
         # mark.color.r = 0.
         # mark.color.g = 1.
         # mark.color.b = 1.
+        # mark.scale.x = .1
+        # mark.scale.y = .1
+        # mark.scale.z = .1
 
         mark.header.frame_id = "/world"
         mark.scale.x = 2.0
         mark.scale.y = 2.0
         mark.scale.z = 2.0
         
-        mark.pose.position.x = 0.
-        mark.pose.position.y = 0.
-        mark.pose.position.z = 0.
+        mark.pose.position.x = +0.02
+        mark.pose.position.y = -0.02
+        mark.pose.position.z = -0.05
         mark.pose.orientation.x = 0.
         mark.pose.orientation.y = 0.
         mark.pose.orientation.z = -0.216
@@ -89,7 +92,7 @@ class TargetNode(Node):
         super().__init__(name)
 
         # Report.
-        self.get_logger().info("Starting the interactive marker...")
+        self.get_logger().info("Starting the random marker...")
         
 
         # Create the interactive vector marker server.
