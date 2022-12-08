@@ -41,6 +41,7 @@ setup(
             'test1_t4 = final_v2.test1_t4:main',
             'test2_t4 = final_v2.test2_t4:main',
             'task4_clean = final_v2.task4_clean:main',
+            'task4_clean_9 = final_v2.task4_clean_9:main',
         ],
     },
 )

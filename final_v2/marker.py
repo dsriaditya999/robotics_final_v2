@@ -5,7 +5,7 @@ from sensor_msgs.msg    import JointState
 import rclpy
 from rclpy.node         import Node
 from numpy import random
-from hw6code.KinematicChain    import KinematicChain
+from final_v2.KinematicChain    import KinematicChain
 import numpy as np
 from hw5code.TransformHelpers  import *
 from std_msgs.msg       import Bool
@@ -24,8 +24,10 @@ class MinimalPublisher(Node):
         self.timer     = self.create_timer(timer_period, self.timer_callback)
 
         self.chain = KinematicChain(Node('marker_chain'), 'world', 'tip', self.jointnames())
-        self.q = np.radians(np.array([0]*41).reshape((-1,1)))
+        self.q = np.radians(np.array([0]*self.chain.dofs).reshape((-1,1)))
         self.q[0,0] = np.pi/2
+        # yz case
+        # self.q[1,0] = np.pi/2
 
         self.subscription_1 = self.create_subscription(
             JointState,
@@ -42,7 +44,7 @@ class MinimalPublisher(Node):
         self.phase = False
 
         self.marker_arr = MarkerArray()
-        self.marker_len = 0
+        self.marker_len = 2
         self.v = [0]*self.marker_len
         for i in range(self.marker_len):
             mark = Marker()
@@ -77,8 +79,17 @@ class MinimalPublisher(Node):
         # Return a list of joint names
         #### YOU WILL HAVE TO LOOK AT THE URDF TO DETERMINE THESE! ####
         j = []
+        
+        # xy case
         for ind in range(1,42):
             j.append('joint%i'%ind)
+        
+        # yz case
+        # for ind in range(1,21):
+        #     j.append('joint%ia'%ind)
+        #     j.append('joint%ib'%ind)
+        # j.append('finalspin')
+
         return j
 
     def joint_rcvd(self,msg):

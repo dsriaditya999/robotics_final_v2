@@ -42,21 +42,17 @@ class TargetMarker:
         mark.type               = Marker.MESH_RESOURCE
         mark.mesh_resource      = "package://final_v2/meshes/textured.dae"
         mark.mesh_use_embedded_materials = True
-        # mark.type = Marker.MESH_RESOURCE
-        # mark.mesh_resource = "package://final_v1/meshes/Rock.stl"
-        # mark.type = 1
-        # mark.color.a = 1.
-        # mark.color.r = 0.
-        # mark.color.g = 1.
-        # mark.color.b = 1.
-        # mark.scale.x = .1
-        # mark.scale.y = .1
-        # mark.scale.z = .1
 
         mark.header.frame_id = "/world"
+        # xy case
         mark.scale.x = 2.0
         mark.scale.y = 2.0
         mark.scale.z = 2.0
+
+        # yz case
+        # mark.scale.x = 5.0
+        # mark.scale.y = 5.0
+        # mark.scale.z = 5.0
         
         mark.pose.position.x = +0.02
         mark.pose.position.y = -0.02

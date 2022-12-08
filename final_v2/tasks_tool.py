@@ -47,7 +47,8 @@ def avoid_objects(goal_list, chain, gamma=0.01):
         eR2 = pd_tip[:2,:]
         eR12 = ep(eR2,eR1)
         eRn = np.linalg.norm(eR12)#ep(pd,pd_tip))
-        eR12 /= eRn**2
+        eRn_large = np.linalg.norm(ep(pd,pd_tip))
+        eR12 /= eRn*eRn_large
         eRR = np.append(eRR, eR12, axis=0)
         J = np.append(J,chain.Jv_tip(tip_dof)[:2,:],axis=0)
     

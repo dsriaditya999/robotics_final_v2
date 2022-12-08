@@ -29,6 +29,10 @@ class Trajectory():
         self.q_nom = np.radians(np.array([0]*41).reshape((-1,1)))
         self.q_nom[0,0] = np.pi/2
 
+        # yz case
+        # self.q[1,0] = np.pi/2
+        # self.q_nom[1,0] = np.pi/2
+
         self.chain.setjoints(self.q)
         
         self.setup_pub_and_sub(node)
@@ -48,6 +52,9 @@ class Trajectory():
         self.node = node
         self.reach_status = True
         self.setting = True
+
+        self.self_colli = 0
+        self.end = False
 
     def setup_pub_and_sub(self,node):
         # [# of total collision, [collision for each marker]]
@@ -85,6 +92,7 @@ class Trajectory():
         self.pgoal = xyzgoal.flatten('F').reshape((self.Node *3,1))
         self.setting = False
         self.setting_target = True
+        self.untied = False
 
 
     def reach_control_rcvd(self,msg):
@@ -98,8 +106,17 @@ class Trajectory():
         # Return a list of joint names
         #### YOU WILL HAVE TO LOOK AT THE URDF TO DETERMINE THESE! ####
         j = []
+
+        # xy case
         for ind in range(1,42):
             j.append('joint%i'%ind)
+        
+        # yz case
+        # for ind in range(1,21):
+        #     j.append('joint%ia'%ind)
+        #     j.append('joint%ib'%ind)
+        # j.append('finalspin')
+
         return j
 
     def findgoal(self, Node=30, startpoint = 5):
@@ -156,8 +173,8 @@ class Trajectory():
 
             self.chain.setjoints(q[j+1])
 
-
-        return q[100]
+        qf, _ = nominal(np.zeros(q[100].shape),q[100])
+        return qf
 
     def _set_target(self, pos=None, quat=None):
         if pos==None:
@@ -243,7 +260,24 @@ class Trajectory():
     # Evaluate at the given time.
     def evaluate(self, ta, dt):
         self.ta = ta
-        T = 50
+        if ta>10000:
+            if not self.end:
+                self.end = True
+                self.node.get_logger().info('#############################################')
+                self.node.get_logger().info('obj coliision #')
+                self.node.get_logger().info(str(self.collision_count))
+                self.node.get_logger().info('total target #')
+                self.node.get_logger().info(str(self.target_total))
+                self.node.get_logger().info('touched target #')
+                self.node.get_logger().info(str(self.target_touched))
+                self.node.get_logger().info('self collision #')
+                self.node.get_logger().info(str(self.self_colli))
+                self.node.get_logger().info('#############################################')
+            phase = Bool()
+            phase.data = False
+            self.publisher_4.publish(phase)
+            return (self.q.flatten().tolist(), np.zeros((41,1)).flatten().tolist())
+        T = 25
         phase1 = 1
         phase2 = 5
         self_collision = None
@@ -259,18 +293,22 @@ class Trajectory():
             self.q = q
             self.chain.setjoints(self.q)
             self.segments = []
-            _, _, _, self_collision = repulsive(self.chain)
+            # _, _, _, self_collision = repulsive(self.chain)
 
-        elif ta%T<=phase2:
+        elif not self.untied:
             qdot1, J1, Jinv1, collision_count, collision_arr = avoid_objects(self.goal_list, self.chain)
             qdot2, J2, Jinv2, self_collision = repulsive(self.chain)
             # qdot3, J3, Jinv3 = target_pinv(self.chain, self.Rf, self.xf)
             qdot3, J3 = nominal(self.q, self.q_nom)
+            if J2.shape[0]==0:
+                self.untied=True
 
             qdot = qdot1 + nullspace(J1,Jinv1) @ (qdot2 + nullspace(J2,Jinv2) @ (qdot3))# + nullspace(J3,Jinv3) @ qdot4))
             q = self.q + qdot*dt
             self.q = q
             self.chain.setjoints(self.q)
+
+            self.err = np.zeros((6,1))
 
         elif self.reach_status:
             if self.setting_target:
@@ -279,16 +317,25 @@ class Trajectory():
                 self.setting = True
 
             qdot1, J1, Jinv1, collision_count, collision_arr = avoid_objects(self.goal_list, self.chain)
-            # qdot2, J2, Jinv2 = target_pinv(self.chain, self.Rf, self.xf)
-            qdot2, J2, Jinv2, xd, Rd = target_spline(self.chain, self.segments[0],ta-self.t0,self.err)
-            _, _, _, self_collision = repulsive(self.chain)
+
+            spline_attract = True
+            pure_attract = False
+            if pure_attract or self.ta>self.t0+6 and spline_attract:
+                qdot2, J2, Jinv2 = target_pinv(self.chain, self.Rf, self.xf)
+                qdot2 *= 5
+            else:
+                qdot2, J2, Jinv2, xd, Rd = target_spline(self.chain, self.segments[0],ta-self.t0,self.err)
+            qdotr, Jr, Jinvr, self_collision = repulsive(self.chain)
             qdot3, J3 = nominal(self.q, self.q_nom)
 
             qdot = qdot1 + nullspace(J1,Jinv1) @ (qdot2 + nullspace(J2,Jinv2) @ (qdot3))# + nullspace(J3,Jinv3) @ qdot4))
+            # qdot = qdot1 + nullspace(J1,Jinv1) @ (qdot2 + nullspace(J2,Jinv2) @ (qdotr + nullspace(Jr,Jinvr) @ qdot3))
+            # dot = qdot1 + nullspace(J1,Jinv1) @ (qdotr + nullspace(Jr,Jinvr) @ (qdot2 + nullspace(J2,Jinv2) @ qdot3))
             q = self.q + qdot*dt
             self.q = q
             self.chain.setjoints(self.q)
-            self.err = np.vstack((ep(xd,self.chain.ptip()), eR(Rd,self.chain.Rtip())))
+            if not pure_attract and (not spline_attract or self.ta<=self.t0+6):
+                self.err = np.vstack((ep(xd,self.chain.ptip()), eR(Rd,self.chain.Rtip())))
             self.check_touch()
         
         else:
@@ -318,6 +365,7 @@ class Trajectory():
         self.publisher_4.publish(phase)
         # pub 5
         if self_collision!=None: 
+            self.self_colli += self_collision
             self.self_collision.data = [self_collision]
             self.publisher_5.publish(self.self_collision)
 

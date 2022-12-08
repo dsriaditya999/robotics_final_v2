@@ -54,6 +54,7 @@
   <joint name="attach-base" type="fixed">
     <parent link="world"/>
     <child link="link0b"/>
+    <origin  xyz="0 0 0"  rpy="0 0 0" />
   </joint>
   <link name="link0b">
     <visual>
@@ -1013,6 +1014,7 @@
   <joint name="attach-mating-plate" type="fixed">
     <parent link="link20c"/>
     <child link="mating-plate"/>
+    <origin  xyz="0 0 0"  rpy="0 0 0" />
   </joint>
   <link name="mating-plate">
     <visual>
@@ -1025,6 +1027,7 @@
   <joint name="attach-flange" type="fixed">
     <parent link="mating-plate"/>
     <child link="flange"/>
+    <origin  xyz="0 0 0"  rpy="0 0 0" />
   </joint>
   <link name="flange">
     <inertial>
@@ -1154,7 +1157,7 @@
     <visual>
       <origin         xyz=" 0.08   0    0.1"    rpy="0 0 0"/>
       <geometry> <box size="0.0404 0.18 0.18"/> </geometry>
-      <material name="blue"/>
+      <material name="white"/>
     </visual>
   </link>
 
@@ -1166,7 +1169,7 @@
     <visual>
       <origin         xyz="-0.08   0    0.1"    rpy="0 0 0"/>
       <geometry> <box size="0.0404 0.18 0.18"/> </geometry>
-      <material name="green"/>
+      <material name="yellow"/>
     </visual>
   </link>
 
@@ -1178,7 +1181,7 @@
     <visual>
       <origin         xyz=" 0    0.08   0.1"    rpy="0 0 0"/>
       <geometry> <box size="0.18 0.0404 0.18"/> </geometry>
-      <material name="white"/>
+      <material name="green"/>
     </visual>
   </link>
 
@@ -1190,7 +1193,7 @@
     <visual>
       <origin         xyz=" 0   -0.08   0.1"    rpy="0 0 0"/>
       <geometry> <box size="0.18 0.0404 0.18"/> </geometry>
-      <material name="yellow"/>
+      <material name="blue"/>
     </visual>
   </link>
 
