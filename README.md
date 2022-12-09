@@ -6,7 +6,7 @@ For this problem, we are considering a simulated environment where there are obs
 - Touch a random target (e.g. a colored cube) in the workspace, with the correct gripper orientation.
 - If initially entangled in a loop, it has to untangle itself and then repeat, the above mentioned tasks.
 
-This project use ```ROS2``` to simlate the robot movement, and the demo link is [here](https://youtu.be/g8eaxnVIguQ).
+This project use ```ROS2``` to simulate the robot movement, and the demo link is [here](https://youtu.be/g8eaxnVIguQ).
 
 To run the entire simulation, run the script
 ```
