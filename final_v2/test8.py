@@ -24,6 +24,7 @@ from hw3code.Segments   import Hold, Stay, GotoCubic, SplineCubic
 
 from final_v2.GeneratorNode     import GeneratorNode
 from final_v2.KinematicChain    import KinematicChain
+from final_v2.tasks_tool import *
 from hw5code.TransformHelpers  import *
 from std_msgs.msg       import Bool
 from geometry_msgs.msg       import Pose
@@ -121,7 +122,8 @@ class Trajectory():
         un = np.linalg.norm(u)
         if un<1e-5:
             w,v = np.linalg.eig( R0f )
-            u = v[:,2].reshape((3,1))
+            index = np.argmin(np.abs(w-1.))
+            u = v[:,index].reshape((3,1))
             u = np.real(u)
         else:
             u/=un
@@ -254,7 +256,7 @@ class Trajectory():
         if self.reach_status:
 
             if len(self.segments)==0:
-                qdot3 = (self.q_nom - self.q)
+                qdot3, J3 = nominal(self.q, self.q_nom)
                 
                 J2 = np.vstack((self.chain.Jv(),self.chain.Jw()))
                 Jinv2 = np.linalg.pinv(J2,0.01)
@@ -275,10 +277,10 @@ class Trajectory():
                 self.q = q
                 self.chain.setjoints(self.q)
             else:
-                qdot3 = (self.q_nom - self.q)
+                qdot3, J3 = nominal(self.q, self.q_nom)
                 
                 J2 = np.vstack((self.chain.Jv(),self.chain.Jw()))
-                Jinv2 = np.linalg.pinv(J2,0.1)
+                Jinv2 = np.linalg.pinv(J2,0.01)
                 (xd, xdot) = self.segments[0][0].evaluate(tabsolute - self.t0)
                 (theta_d, wd) = self.segments[0][1].evaluate(tabsolute - self.t0)
                 eh = self.segments[0][2]

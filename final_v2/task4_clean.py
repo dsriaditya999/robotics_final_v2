@@ -260,7 +260,7 @@ class Trajectory():
     # Evaluate at the given time.
     def evaluate(self, ta, dt):
         self.ta = ta
-        if ta>10000:
+        if ta>100:
             if not self.end:
                 self.end = True
                 self.node.get_logger().info('#############################################')

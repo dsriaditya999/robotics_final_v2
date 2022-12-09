@@ -71,7 +71,19 @@ def generate_launch_description():
         on_exit    = Shutdown())
 
 
+    node_target = Node(
+        name       = 'target_random',
+        package    = 'final_v2',
+        executable = 'target_random',
+        # output     = 'screen',
+        on_exit    = Shutdown())
 
+    node_joint_marker = Node(
+        name       = 'marker', 
+        package    = 'final_v2',
+        executable = 'marker',
+        # output     = 'screen',
+        on_exit    = Shutdown())
 
 
     ######################################################################
@@ -84,4 +96,6 @@ def generate_launch_description():
         node_rviz,
         node_urdf,
         node_joint_testk2,
+        node_target,
+        node_joint_marker
     ])
