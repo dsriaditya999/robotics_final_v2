@@ -77,6 +77,9 @@ class Trajectory():
         self.node = node
         self.reach_status = True
 
+        self.publisher_4 = node.create_publisher(Bool, 'phase', 10)
+        
+
 
     def reach_control_rcvd(self,msg):
 
@@ -203,6 +206,9 @@ class Trajectory():
         collision_count = 0
         collision_threshold = 0.072
         collision_arr = Int32MultiArray()
+        phase = Bool()
+        phase.data = True
+        self.publisher_4.publish(phase)
 
         for goal in self.goal_list:
             pd = np.array(goal).reshape((3,1))
@@ -279,15 +285,16 @@ class Trajectory():
             else:
                 qdot3, J3 = nominal(self.q, self.q_nom)
                 
-                J2 = np.vstack((self.chain.Jv(),self.chain.Jw()))
-                Jinv2 = np.linalg.pinv(J2,0.01)
-                (xd, xdot) = self.segments[0][0].evaluate(tabsolute - self.t0)
-                (theta_d, wd) = self.segments[0][1].evaluate(tabsolute - self.t0)
-                eh = self.segments[0][2]
-                R0 = self.segments[0][3]
-                Rd = R0 @ Rote(eh,theta_d)
-                wd = R0 @ eh * wd
-                xd2 = np.vstack((xdot,wd))
+                # J2 = np.vstack((self.chain.Jv(),self.chain.Jw()))
+                # Jinv2 = np.linalg.pinv(J2,0.01)
+                # (xd, xdot) = self.segments[0][0].evaluate(tabsolute - self.t0)
+                # (theta_d, wd) = self.segments[0][1].evaluate(tabsolute - self.t0)
+                # eh = self.segments[0][2]
+                # R0 = self.segments[0][3]
+                # Rd = R0 @ Rote(eh,theta_d)
+                # wd = R0 @ eh * wd
+                # xd2 = np.vstack((xdot,wd))
+                qdot2, J2, Jinv2, xd, Rd = target_spline(self.chain, self.segments[0],tabsolute-self.t0,self.err)
 
                 # two primary task
                 # eRR = np.append(eRR, (xd2 + 10*self.err), axis=0)
@@ -296,7 +303,7 @@ class Trajectory():
                 # qdot = Jinv @ (eRR) + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot3)
 
                 # avoid -> traj
-                qdot2 = Jinv2 @ (xd2 + 10*self.err) + (np.eye(J2.shape[1])- Jinv2 @ J2) @ qdot3
+                qdot2 = qdot2 + nullspace(J2, Jinv2) @ qdot3
                 Jinv = np.linalg.pinv(J_all,0.01)
                 qdot = Jinv @ eRR + (np.eye(J_all.shape[1])- Jinv @ J_all)@ (qdot2)
 
