@@ -1,3 +1,7 @@
-# 133a Robotics Final Project - Task 2
+# 133a Robotics Final Project
 
-Overall Objective : Obstacles are falling in different locations and times. So the task for snake arm is to touch the target cube attached to a wall (Define a repulsive field that varies in time and space, and execute the trajectory)
+For this problem, we are considering a simulated environment where there are obstacles (e.g. rocks) falling vertically. The robot being used is a redundant snake arm. The robotic snake arm has to perform the following tasks :
+
+- Avoid the obstacles hitting its body.
+- Touch a random target (e.g. a colored cube) in the workspace, with the correct gripper orientation.
+- If initially entangled in a loop, it has to untangle itself and then repeat, the above mentioned tasks.
